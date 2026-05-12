@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리집 디지털 학습 가이드라인</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap');
+
+        :root {
+            --pastel-blue: #E3F2FD;
+            --pastel-pink: #FCE4EC;
+            --pastel-green: #E8F5E9;
+            --pastel-yellow: #FFFDE7;
+            --soft-purple: #F3E5F5;
+        }
+
+        body {
+            font-family: 'Gaegu', cursive, sans-serif;
+            background-color: var(--pastel-blue);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+
+        .check-item {
+            transition: all 0.2s ease;
+        }
+
+        .check-item:hover {
+            transform: translateX(5px);
+        }
+
+        .progress-bar {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hidden-section {
+            display: none;
+        }
+
+        input[type="checkbox"] {
+            width: 1.5rem;
+            height: 1.5rem;
+            cursor: pointer;
+            accent-color: #f472b6;
+        }
+
+        /* Star Animation */
+        .star {
+            position: absolute;
+            pointer-events: none;
+            animation: twinkle 1s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="w-full max-w-lg card p-6 md:p-8 relative overflow-hidden">
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <p class="text-xs text-gray-400 mb-2">개발자: 가치있는 미래교육 연구소 대표 김병찬</p>
+            <h1 class="text-3xl font-bold text-pink-500 mb-1">🏠 우리집 디지털 가이드</h1>
+            <p id="today-date" class="text-gray-500 text-lg"></p>
+        </header>
+
+        <!-- 1. Rule Setup Section -->
+        <section id="setup-section" class="space-y-4">
+            <div class="bg-yellow-50 p-4 rounded-xl border-2 border-yellow-100">
+                <p class="text-center text-gray-700 font-bold mb-3">👨‍👩‍👧‍👦 우리 가족의 약속을 정해볼까요? (최대 10개)</p>
+                <div id="rules-input-list" class="space-y-2 max-h-80 overflow-y-auto pr-2">
+                    <!-- Rule Inputs -->
+                    <div class="flex gap-2">
+                        <input type="text" placeholder="누구?" class="member-name w-1/4 p-2 rounded-lg border-2 border-pink-200 focus:border-pink-400 outline-none text-sm" value="아이">
+                        <input type="text" placeholder="약속 내용을 입력하세요" class="rule-text w-3/4 p-2 rounded-lg border-2 border-pink-200 focus:border-pink-400 outline-none text-sm">
+                    </div>
+                </div>
+                <button onclick="addInputRow()" class="w-full mt-3 text-pink-400 hover:text-pink-600 text-sm py-1 border-2 border-dashed border-pink-200 rounded-lg">
+                    <i class="fas fa-plus mr-1"></i> 약속 추가하기
+                </button>
+            </div>
+            <button onclick="startGuideline()" class="w-full bg-pink-400 text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-pink-500 btn-bounce transition-colors text-xl">
+                가이드라인 시작하기 ✨
+            </button>
+        </section>
+
+        <!-- 2. Dashboard Section -->
+        <section id="dashboard-section" class="hidden-section space-y-6">
+            <!-- Progress Bar -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-end">
+                    <span class="text-gray-600 font-bold">오늘의 목표 달성도</span>
+                    <span id="progress-text" class="text-pink-500 font-bold">0%</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-4 overflow-hidden border border-gray-200">
+                    <div id="progress-fill" class="progress-bar h-full bg-gradient-to-r from-pink-300 to-pink-500 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Rules List -->
+            <div id="active-rules-list" class="space-y-3">
+                <!-- Checklist Items -->
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button onclick="settleDaily()" class="w-full bg-indigo-400 text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-indigo-500 btn-bounce text-xl">
+                    오늘의 일일 정산하기 📝
+                </button>
+                <button onclick="goBackToSetup()" class="text-gray-400 text-sm hover:underline">
+                    약속 수정하기
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. Result & History Section -->
+        <section id="result-section" class="hidden-section text-center space-y-6 py-4">
+            <div id="result-animation-area" class="text-6xl mb-4"></div>
+            <h2 id="result-message" class="text-2xl font-bold text-gray-800 break-keep"></h2>
+            
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <h3 class="text-gray-500 font-bold mb-2 text-left text-sm">📅 최근 7일 히스토리</h3>
+                <div id="history-log" class="space-y-2 text-left">
+                    <!-- History entries -->
+                </div>
+            </div>
+
+            <button onclick="resetDay()" class="w-full bg-green-400 text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-green-500 btn-bounce text-xl">
+                내일 다시 도전하기 🚀
+            </button>
+        </section>
+    </div>
+
+    <script>
+        let rules = [];
+        let history = JSON.parse(localStorage.getItem('family_digital_history') || '[]');
+
+        // Initialize Date
+        const updateDate = () => {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('today-date').innerText = now.toLocaleDateString('ko-KR', options);
+        };
+        updateDate();
+
+        // Add more input rows
+        function addInputRow() {
+            const list = document.getElementById('rules-input-list');
+            if (list.children.length >= 10) return;
+            
+            const div = document.createElement('div');
+            div.className = 'flex gap-2';
+            div.innerHTML = `
+                <input type="text" placeholder="누구?" class="member-name w-1/4 p-2 rounded-lg border-2 border-pink-200 focus:border-pink-400 outline-none text-sm">
+                <input type="text" placeholder="약속 내용을 입력하세요" class="rule-text w-3/4 p-2 rounded-lg border-2 border-pink-200 focus:border-pink-400 outline-none text-sm">
+            `;
+            list.appendChild(div);
+        }
+
+        // Start App
+        function startGuideline() {
+            const nameInputs = document.querySelectorAll('.member-name');
+            const textInputs = document.querySelectorAll('.rule-text');
+            rules = [];
+
+            nameInputs.forEach((input, index) => {
+                const name = input.value.trim();
+                const text = textInputs[index].value.trim();
+                if (name && text) {
+                    rules.push({ name, text, completed: false });
+                }
+            });
+
+            if (rules.length === 0) {
+                alert("최소 하나의 약속은 입력해 주세요!");
+                return;
+            }
+
+            renderDashboard();
+            switchSection('dashboard-section');
+        }
+
+        // Render Dashboard
+        function renderDashboard() {
+            const list = document.getElementById('active-rules-list');
+            list.innerHTML = '';
+
+            rules.forEach((rule, index) => {
+                const div = document.createElement('div');
+                div.className = `check-item flex items-center p-4 rounded-2xl border-2 ${rule.completed ? 'bg-pink-50 border-pink-200' : 'bg-white border-gray-100 shadow-sm'}`;
+                div.innerHTML = `
+                    <input type="checkbox" id="rule-${index}" ${rule.completed ? 'checked' : ''} 
+                        onchange="toggleRule(${index})" class="mr-4">
+                    <label for="rule-${index}" class="flex-1 cursor-pointer">
+                        <span class="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full mr-2 font-bold">${rule.name}</span>
+                        <span class="text-lg ${rule.completed ? 'line-through text-gray-400' : 'text-gray-700'}">${rule.text}</span>
+                    </label>
+                `;
+                list.appendChild(div);
+            });
+            updateProgress();
+        }
+
+        function toggleRule(index) {
+            rules[index].completed = !rules[index].completed;
+            renderDashboard();
+        }
+
+        function updateProgress() {
+            const completedCount = rules.filter(r => r.completed).length;
+            const percentage = Math.round((completedCount / rules.length) * 100);
+            document.getElementById('progress-fill').style.width = percentage + '%';
+            document.getElementById('progress-text').innerText = percentage + '%';
+        }
+
+        // Settlement Logic
+        function settleDaily() {
+            const completedCount = rules.filter(r => r.completed).length;
+            const ratio = completedCount / rules.length;
+            const resultArea = document.getElementById('result-animation-area');
+            const message = document.getElementById('result-message');
+
+            // Save history
+            const todayStr = new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+            history.unshift({ date: todayStr, score: Math.round(ratio * 100) });
+            history = history.slice(0, 7); // Keep last 7 days
+            localStorage.setItem('family_digital_history', JSON.stringify(history));
+
+            // Display Results
+            if (ratio === 1) {
+                resultArea.innerText = "👑";
+                message.innerHTML = "완벽해요!<br>디지털 리더의 탄생!";
+                fireConfetti();
+            } else if (ratio >= 0.5) {
+                resultArea.innerText = "✨";
+                message.innerHTML = "대단해요!<br>내일은 완벽 달성에 도전해 봐요!";
+                fireStars();
+            } else {
+                resultArea.innerText = "🧸";
+                message.innerHTML = "괜찮아요.<br>내일은 더 잘할 수 있어요! 화이팅!";
+            }
+
+            renderHistory();
+            switchSection('result-section');
+        }
+
+        function renderHistory() {
+            const historyDiv = document.getElementById('history-log');
+            historyDiv.innerHTML = history.length === 0 ? '<p class="text-gray-400 text-xs italic">기록이 아직 없습니다.</p>' : '';
+            
+            history.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'flex justify-between items-center text-sm border-b border-gray-100 pb-1';
+                row.innerHTML = `
+                    <span class="text-gray-500">${item.date}</span>
+                    <div class="flex items-center gap-2">
+                        <div class="w-24 bg-gray-200 h-2 rounded-full overflow-hidden">
+                            <div class="bg-pink-300 h-full" style="width: ${item.score}%"></div>
+                        </div>
+                        <span class="font-bold text-gray-700">${item.score}%</span>
+                    </div>
+                `;
+                historyDiv.appendChild(row);
+            });
+        }
+
+        // Animations
+        function fireConfetti() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#f472b6', '#818cf8', '#fbbf24']
+            });
+        }
+
+        function fireStars() {
+            const container = document.getElementById('app');
+            for(let i=0; i<20; i++) {
+                const star = document.createElement('div');
+                star.className = 'star text-yellow-400';
+                star.innerHTML = '★';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(star);
+                setTimeout(() => star.remove(), 3000);
+            }
+        }
+
+        // Utilities
+        function switchSection(id) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden-section'));
+            document.getElementById(id).classList.remove('hidden-section');
+        }
+
+        function resetDay() {
+            rules.forEach(r => r.completed = false);
+            renderDashboard();
+            switchSection('dashboard-section');
+        }
+
+        function goBackToSetup() {
+            switchSection('setup-section');
+        }
+
+    </script>
+</body>
+</html>
